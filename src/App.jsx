@@ -26,8 +26,7 @@ const controls = [
     min: 1,
     max: 1000,
     step: 1,
-    format: (value) =>
-      `${Number(value).toLocaleString('en-IN')} units`,
+    format: (value) => `${Number(value).toLocaleString('en-IN')} units`,
   },
   {
     key: 'leads',
@@ -35,8 +34,7 @@ const controls = [
     min: 1,
     max: 50000,
     step: 100,
-    format: (value) =>
-      Number(value).toLocaleString('en-IN'),
+    format: (value) => Number(value).toLocaleString('en-IN'),
   },
   {
     key: 'costPerLead',
@@ -44,8 +42,7 @@ const controls = [
     min: 50,
     max: 2000,
     step: 50,
-    format: (value) =>
-      `₹${Number(value).toLocaleString('en-IN')}`,
+    format: (value) => `₹${Number(value).toLocaleString('en-IN')}`,
   },
   {
     key: 'leadToVisit',
@@ -79,14 +76,23 @@ function App() {
     (values.leads * values.leadToVisit) / 100
   );
 
-  const totalBookings = Math.floor(
+  const projectBookings = Math.floor(
     (totalVisits * values.visitToBooking) / 100
   );
 
-  const totalSpend = values.leads * values.costPerLead;
+  const leadAcquisitionSpend =
+    values.leads * values.costPerLead;
+
+  const monthlyBookings =
+    projectBookings / values.duration;
+
+  const mediaCacPerBooking =
+    projectBookings > 0
+      ? leadAcquisitionSpend / projectBookings
+      : 0;
 
   const absorbedUnits = Math.min(
-    totalBookings,
+    projectBookings,
     values.inventory
   );
 
@@ -100,7 +106,10 @@ function App() {
       ? (absorbedUnits / values.inventory) * 100
       : 0;
 
-  const monthlyBookings = totalBookings / values.duration;
+  const selloutTime =
+    monthlyBookings > 0
+      ? values.inventory / monthlyBookings
+      : null;
 
   const formatNumber = (number) =>
     Math.round(number).toLocaleString('en-IN');
@@ -114,7 +123,6 @@ function App() {
 
   return (
     <main className="simulator">
-      {/* Header */}
       <header className="simulator-header">
         <div className="brand-logo">
           <img
@@ -132,7 +140,6 @@ function App() {
         </h1>
       </header>
 
-      {/* Simulation Parameters */}
       <section className="controls-panel">
         <div className="section-heading">
           <div>
@@ -207,7 +214,6 @@ function App() {
         </div>
       </section>
 
-      {/* Simulation Results */}
       <section className="results-section">
         <div className="results-heading">
           <div>
@@ -226,69 +232,120 @@ function App() {
         <div className="results-grid">
           <article className="result-card">
             <span className="result-label">
-              Estimated Site Visits
+              Expected Site Visits
             </span>
             <strong>{formatNumber(totalVisits)}</strong>
-            <p>From total raw leads</p>
+            <p>
+              Estimated completed visits from raw leads
+            </p>
           </article>
 
           <article className="result-card">
             <span className="result-label">
-              Estimated Bookings
+              Lead Acquisition Spend
             </span>
-            <strong>{formatNumber(totalBookings)}</strong>
-            <p>Based on conversion rates</p>
+            <strong>
+              {formatCurrency(leadAcquisitionSpend)}
+            </strong>
+            <p>Total leads × cost per lead</p>
           </article>
 
           <article className="result-card">
             <span className="result-label">
-              Inventory Absorption
+              Monthly Bookings
             </span>
+            <strong>{monthlyBookings.toFixed(1)}</strong>
+            <p>Average projected bookings per month</p>
+          </article>
+
+          <article className="result-card">
+            <span className="result-label">
+              Project Bookings
+            </span>
+            <strong>{formatNumber(projectBookings)}</strong>
+            <p>
+              Estimated bookings over the selected
+              duration, before inventory cap
+            </p>
+          </article>
+
+          <article className="result-card">
+            <span className="result-label">
+              Media CAC / Booking
+            </span>
+            <strong>
+              {projectBookings > 0
+                ? formatCurrency(mediaCacPerBooking)
+                : 'N/A'}
+            </strong>
+            <p>
+              Lead acquisition spend ÷ project bookings
+            </p>
+          </article>
+
+          <article className="result-card">
+            <span className="result-label">
+              Sellout Time
+            </span>
+            <strong>
+              {selloutTime !== null
+                ? `${selloutTime.toFixed(1)} months`
+                : 'N/A'}
+            </strong>
+            <p>
+              Estimated time to absorb the full inventory
+              at the projected booking pace
+            </p>
+          </article>
+
+          <article className="result-card absorption-card">
+            <span className="result-label">
+              Projected Inventory Absorption
+            </span>
+
             <strong>{absorptionRate.toFixed(1)}%</strong>
 
-            <div className="progress-track">
+            <div
+              className="progress-track"
+              role="progressbar"
+              aria-label="Projected inventory absorption"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Number(
+                absorptionRate.toFixed(1)
+              )}
+            >
               <div
                 className="progress-fill"
-                style={{ width: `${absorptionRate}%` }}
+                style={{
+                  width: `${absorptionRate}%`,
+                }}
               ></div>
             </div>
 
-            <p>{formatNumber(absorbedUnits)} units absorbed</p>
-          </article>
+            <p>
+              {formatNumber(absorbedUnits)} of{' '}
+              {formatNumber(values.inventory)} units
+              projected to be absorbed
+            </p>
 
-          <article className="result-card">
-            <span className="result-label">
-              Remaining Inventory
-            </span>
-            <strong>{formatNumber(remainingInventory)}</strong>
-            <p>Units remaining after bookings</p>
-          </article>
-
-          <article className="result-card">
-            <span className="result-label">
-              Total Lead Generation Cost
-            </span>
-            <strong>{formatCurrency(totalSpend)}</strong>
-            <p>Raw leads × cost per lead</p>
-          </article>
-
-          <article className="result-card">
-            <span className="result-label">
-              Average Monthly Bookings
-            </span>
-            <strong>{monthlyBookings.toFixed(1)}</strong>
-            <p>Estimated bookings per month</p>
+            <p>
+              {formatNumber(remainingInventory)} units
+              remaining
+            </p>
           </article>
         </div>
 
         <div className="simulation-note">
           <span className="note-icon">i</span>
           <p>
-            These are illustrative estimates, not guaranteed sales.
-            Bookings are calculated using the selected conversion
-            rates. Inventory absorption is capped at available units.
-            The model assumes constant conversion rates throughout
-            the selected duration.
+            These are illustrative estimates, not guaranteed
+            sales. Expected site visits and project bookings
+            use the selected conversion rates. Media CAC is
+            calculated using lead acquisition spend only.
+            Projected inventory absorption is capped at
+            available inventory. Sellout time assumes the
+            projected booking pace remains constant.
           </p>
         </div>
       </section>
