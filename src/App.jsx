@@ -71,50 +71,39 @@ function App() {
     }));
   };
 
-  // A. Expected site visits = Raw Leads × (Visit Rate / 100)
   const totalVisits = Math.floor(
     (values.leads * values.leadToVisit) / 100
   );
 
-  // B. Expected bookings (before inventory cap) / Demand Bookings
   const demandBookings = Math.floor(
     (totalVisits * values.visitToBooking) / 100
   );
 
-  // C. Projected bookings (inventory capped) = min(Demand Bookings, Available Inventory)
   const projectBookings = Math.min(demandBookings, values.inventory);
 
-  // D. Lead acquisition spend (Media Spend) = Raw Leads × CPL
   const leadAcquisitionSpend = values.leads * values.costPerLead;
 
-  // F. Average monthly lead volume = Raw Leads / Duration Months
   const monthlyLeads = values.duration > 0 ? values.leads / values.duration : 0;
 
-  // G. Average monthly site visits = Site Visits / Duration Months
   const monthlyVisits = values.duration > 0 ? totalVisits / values.duration : 0;
 
-  // H. Average monthly bookings = Projected Bookings / Duration Months
   const monthlyBookings = values.duration > 0 ? projectBookings / values.duration : 0;
 
-  // E. Media CAC per booking = Media Spend / Projected Bookings
   const mediaCacPerBooking =
     projectBookings > 0
       ? leadAcquisitionSpend / projectBookings
       : 0;
 
-  // I. Inventory absorption rate = (Projected Bookings / Available Inventory) × 100
   const absorptionRate =
     values.inventory > 0
       ? (projectBookings / values.inventory) * 100
       : 0;
 
-  // J. Remaining inventory = Available Inventory - Projected Bookings
   const remainingInventory = Math.max(
     0,
     values.inventory - projectBookings
   );
 
-  // K. Estimated inventory sellout timeline = Available Inventory / (Demand Bookings / Duration Months)
   const demandMonthlyBookings = values.duration > 0 ? demandBookings / values.duration : 0;
   const selloutTime =
     demandMonthlyBookings > 0
@@ -136,7 +125,7 @@ function App() {
       <header className="simulator-header">
         <div className="brand-logo">
           <img
-            src="/primarylogo.png"
+            src="/updatedlogo.png"
             alt="Company Logo"
             onError={(event) => {
               event.currentTarget.style.display = 'none';
