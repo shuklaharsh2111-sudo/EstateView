@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import './App.css';
 
@@ -72,43 +71,54 @@ function App() {
     }));
   };
 
+  // A. Expected site visits = Raw Leads × (Visit Rate / 100)
   const totalVisits = Math.floor(
     (values.leads * values.leadToVisit) / 100
   );
 
-  const projectBookings = Math.floor(
+  // B. Expected bookings (before inventory cap) / Demand Bookings
+  const demandBookings = Math.floor(
     (totalVisits * values.visitToBooking) / 100
   );
 
-  const leadAcquisitionSpend =
-    values.leads * values.costPerLead;
+  // C. Projected bookings (inventory capped) = min(Demand Bookings, Available Inventory)
+  const projectBookings = Math.min(demandBookings, values.inventory);
 
-  const monthlyBookings =
-    projectBookings / values.duration;
+  // D. Lead acquisition spend (Media Spend) = Raw Leads × CPL
+  const leadAcquisitionSpend = values.leads * values.costPerLead;
 
+  // F. Average monthly lead volume = Raw Leads / Duration Months
+  const monthlyLeads = values.duration > 0 ? values.leads / values.duration : 0;
+
+  // G. Average monthly site visits = Site Visits / Duration Months
+  const monthlyVisits = values.duration > 0 ? totalVisits / values.duration : 0;
+
+  // H. Average monthly bookings = Projected Bookings / Duration Months
+  const monthlyBookings = values.duration > 0 ? projectBookings / values.duration : 0;
+
+  // E. Media CAC per booking = Media Spend / Projected Bookings
   const mediaCacPerBooking =
     projectBookings > 0
       ? leadAcquisitionSpend / projectBookings
       : 0;
 
-  const absorbedUnits = Math.min(
-    projectBookings,
-    values.inventory
-  );
-
-  const remainingInventory = Math.max(
-    0,
-    values.inventory - absorbedUnits
-  );
-
+  // I. Inventory absorption rate = (Projected Bookings / Available Inventory) × 100
   const absorptionRate =
     values.inventory > 0
-      ? (absorbedUnits / values.inventory) * 100
+      ? (projectBookings / values.inventory) * 100
       : 0;
 
+  // J. Remaining inventory = Available Inventory - Projected Bookings
+  const remainingInventory = Math.max(
+    0,
+    values.inventory - projectBookings
+  );
+
+  // K. Estimated inventory sellout timeline = Available Inventory / (Demand Bookings / Duration Months)
+  const demandMonthlyBookings = values.duration > 0 ? demandBookings / values.duration : 0;
   const selloutTime =
-    monthlyBookings > 0
-      ? values.inventory / monthlyBookings
+    demandMonthlyBookings > 0
+      ? values.inventory / demandMonthlyBookings
       : null;
 
   const formatNumber = (number) =>
@@ -235,9 +245,7 @@ function App() {
               Expected Site Visits
             </span>
             <strong>{formatNumber(totalVisits)}</strong>
-            <p>
-              Estimated completed visits from raw leads
-            </p>
+            <p>Estimated completed visits from raw leads</p>
           </article>
 
           <article className="result-card">
@@ -264,8 +272,7 @@ function App() {
             </span>
             <strong>{formatNumber(projectBookings)}</strong>
             <p>
-              Estimated bookings over the selected
-              duration, before inventory cap
+              Estimated bookings over selected duration, inventory capped
             </p>
           </article>
 
@@ -278,9 +285,7 @@ function App() {
                 ? formatCurrency(mediaCacPerBooking)
                 : 'N/A'}
             </strong>
-            <p>
-              Lead acquisition spend ÷ project bookings
-            </p>
+            <p>Lead acquisition spend ÷ project bookings</p>
           </article>
 
           <article className="result-card">
@@ -292,10 +297,7 @@ function App() {
                 ? `${selloutTime.toFixed(1)} months`
                 : 'N/A'}
             </strong>
-            <p>
-              Estimated time to absorb the full inventory
-              at the projected booking pace
-            </p>
+            <p>Estimated time to absorb inventory based on demand pace</p>
           </article>
 
           <article className="result-card absorption-card">
@@ -318,20 +320,18 @@ function App() {
               <div
                 className="progress-fill"
                 style={{
-                  width: `${absorptionRate}%`,
+                  width: `${Math.min(100, absorptionRate)}%`,
                 }}
               ></div>
             </div>
 
             <p>
-              {formatNumber(absorbedUnits)} of{' '}
-              {formatNumber(values.inventory)} units
-              projected to be absorbed
+              {formatNumber(projectBookings)} of{' '}
+              {formatNumber(values.inventory)} units projected to be absorbed
             </p>
 
             <p>
-              {formatNumber(remainingInventory)} units
-              remaining
+              {formatNumber(remainingInventory)} units remaining
             </p>
           </article>
         </div>
@@ -339,13 +339,7 @@ function App() {
         <div className="simulation-note">
           <span className="note-icon">i</span>
           <p>
-            These are illustrative estimates, not guaranteed
-            sales. Expected site visits and project bookings
-            use the selected conversion rates. Media CAC is
-            calculated using lead acquisition spend only.
-            Projected inventory absorption is capped at
-            available inventory. Sellout time assumes the
-            projected booking pace remains constant.
+            These are illustrative estimates based on standard real estate metrics. Calculations strictly follow formula definitions for lead conversion, inventory capping, media spend, CAC, and absorption timelines.
           </p>
         </div>
       </section>
