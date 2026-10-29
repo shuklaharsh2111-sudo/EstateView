@@ -1,0 +1,55 @@
+# A. Expected site visits
+**Formula:**
+Site Visits = Raw Leads × (Visit Rate / 100)
+**Example:** 10,000 × 5% = **500 site visits**
+---
+# B. Expected bookings (before inventory cap)
+**Formula:**
+Demand Bookings = Site Visits × (Booking Rate / 100)
+**Example:** 500 × 20% = **100 bookings**
+---
+# C. Projected bookings (inventory capped)
+**Formula:**
+Projected Bookings = min(Demand Bookings, Available Inventory)
+**Example:** For 132 units: min(100, 132) = **100 projected bookings**
+This is the maximum expected bookings that can be fulfilled from available inventory.
+---
+# D. Lead acquisition spend
+**Formula:**
+Media Spend = Raw Leads × CPL
+**Example:** 10,000 × ₹500 = **₹50 lakh**
+---
+# E. Media CAC per booking
+**Formula:**
+Media CAC = Media Spend / Projected Bookings
+**Example:** ₹50,00,000 ÷ 100 = **₹50,000 per booking**
+This is media-only CAC, excluding agency fees, sales salaries, commissions, events and production.
+---
+# F. Average monthly lead volume
+**Formula:**
+Monthly Leads = Raw Leads / Duration Months
+**Example:** 10,000 ÷ 12 = **833.3 leads per month**
+---
+# G. Average monthly site visits
+**Formula:**
+Monthly Visits = Site Visits / Duration Months
+**Example:** 500 ÷ 12 = **41.7 site visits per month**
+---
+# H. Average monthly bookings
+**Formula:**
+Monthly Bookings = Projected Bookings / Duration Months
+---
+# I. Inventory absorption rate
+**Formula:**
+Absorption Rate = (Projected Bookings / Available Inventory) × 100
+**Example:** 100 ÷ 132 × 100 = **75.76%**
+---
+# J. Remaining inventory
+**Formula:**
+Remaining Units = Available Inventory − Projected Bookings
+**Example:** 132 − 100 = **32 units**
+---
+# K. Estimated inventory sellout timeline
+**Formula:**
+Sellout Months = Available Inventory / (Demand Bookings / Duration Months)
+**Example:** 132 ÷ (100 ÷ 12) = **15.84 months**

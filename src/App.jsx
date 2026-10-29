@@ -71,47 +71,74 @@ function App() {
     }));
   };
 
-  const totalVisits = Math.floor(
-    (values.leads * values.leadToVisit) / 100
+  // A. Expected Site Visits
+  // Site Visits = Raw Leads × (Visit Rate / 100)
+  const totalVisits =
+    values.leads * (values.leadToVisit / 100);
+
+  // B. Expected Bookings Before Inventory Cap
+  // Demand Bookings = Site Visits × (Booking Rate / 100)
+  const demandBookings =
+    totalVisits * (values.visitToBooking / 100);
+
+  // C. Projected Bookings
+  // Projected Bookings = min(Demand Bookings, Available Inventory)
+  const projectBookings = Math.min(
+    demandBookings,
+    values.inventory
   );
 
-  const demandBookings = Math.floor(
-    (totalVisits * values.visitToBooking) / 100
-  );
+  // D. Lead Acquisition Spend
+  // Media Spend = Raw Leads × CPL
+  const leadAcquisitionSpend =
+    values.leads * values.costPerLead;
 
-  const projectBookings = Math.min(demandBookings, values.inventory);
-
-  const leadAcquisitionSpend = values.leads * values.costPerLead;
-
-  const monthlyLeads = values.duration > 0 ? values.leads / values.duration : 0;
-
-  const monthlyVisits = values.duration > 0 ? totalVisits / values.duration : 0;
-
-  const monthlyBookings = values.duration > 0 ? projectBookings / values.duration : 0;
-
+  // E. Media CAC Per Booking
+  // Media CAC = Media Spend / Projected Bookings
   const mediaCacPerBooking =
     projectBookings > 0
       ? leadAcquisitionSpend / projectBookings
       : 0;
 
+  // F. Average Monthly Lead Volume
+  // Monthly Leads = Raw Leads / Duration Months
+  const monthlyLeads =
+    values.leads / values.duration;
+
+  // G. Average Monthly Site Visits
+  // Monthly Visits = Site Visits / Duration Months
+  const monthlyVisits =
+    totalVisits / values.duration;
+
+  // H. Average Monthly Bookings
+  // Monthly Bookings = Projected Bookings / Duration Months
+  const monthlyBookings =
+    projectBookings / values.duration;
+
+  // I. Inventory Absorption Rate
+  // Absorption Rate = (Projected Bookings / Available Inventory) × 100
   const absorptionRate =
-    values.inventory > 0
-      ? (projectBookings / values.inventory) * 100
-      : 0;
+    (projectBookings / values.inventory) * 100;
 
-  const remainingInventory = Math.max(
-    0,
-    values.inventory - projectBookings
-  );
+  // J. Remaining Inventory
+  // Remaining Units = Available Inventory - Projected Bookings
+  const remainingInventory =
+    values.inventory - projectBookings;
 
-  const demandMonthlyBookings = values.duration > 0 ? demandBookings / values.duration : 0;
+  // K. Estimated Inventory Sellout Timeline
+  // Sellout Months = Inventory / (Demand Bookings / Duration Months)
+  const demandMonthlyBookings =
+    demandBookings / values.duration;
+
   const selloutTime =
     demandMonthlyBookings > 0
       ? values.inventory / demandMonthlyBookings
       : null;
 
   const formatNumber = (number) =>
-    Math.round(number).toLocaleString('en-IN');
+    Number(number).toLocaleString('en-IN', {
+      maximumFractionDigits: 1,
+    });
 
   const formatCurrency = (number) =>
     `₹${Math.round(number).toLocaleString('en-IN')}`;
