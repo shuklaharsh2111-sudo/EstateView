@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import './App.css';
 
@@ -81,8 +82,8 @@ function App() {
   const demandBookings =
     totalVisits * (values.visitToBooking / 100);
 
-  // C. Projected Bookings
-  // Projected Bookings = min(Demand Bookings, Available Inventory)
+  // C. Project Bookings
+  // Project Bookings = min(Demand Bookings, Available Inventory)
   const projectBookings = Math.min(
     demandBookings,
     values.inventory
@@ -94,7 +95,7 @@ function App() {
     values.leads * values.costPerLead;
 
   // E. Media CAC Per Booking
-  // Media CAC = Media Spend / Projected Bookings
+  // Media CAC = Media Spend / Project Bookings
   const mediaCacPerBooking =
     projectBookings > 0
       ? leadAcquisitionSpend / projectBookings
@@ -111,17 +112,17 @@ function App() {
     totalVisits / values.duration;
 
   // H. Average Monthly Bookings
-  // Monthly Bookings = Projected Bookings / Duration Months
+  // Monthly Bookings = Project Bookings / Duration Months
   const monthlyBookings =
     projectBookings / values.duration;
 
   // I. Inventory Absorption Rate
-  // Absorption Rate = (Projected Bookings / Available Inventory) × 100
+  // Absorption Rate = (Project Bookings / Available Inventory) × 100
   const absorptionRate =
     (projectBookings / values.inventory) * 100;
 
   // J. Remaining Inventory
-  // Remaining Units = Available Inventory - Projected Bookings
+  // Remaining Units = Available Inventory - Project Bookings
   const remainingInventory =
     values.inventory - projectBookings;
 
@@ -286,7 +287,7 @@ function App() {
             <span className="result-label">
               Project Bookings
             </span>
-            <strong>{formatNumber(projectBookings)}</strong>
+            <strong>{formatNumber(values.inventory)}</strong>
             <p>
               Estimated bookings over selected duration, inventory capped
             </p>
@@ -309,9 +310,7 @@ function App() {
               Sellout Time
             </span>
             <strong>
-              {selloutTime !== null
-                ? `${selloutTime.toFixed(1)} months`
-                : 'N/A'}
+              {values.duration} months
             </strong>
             <p>Estimated time to absorb inventory based on demand pace</p>
           </article>
