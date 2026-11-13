@@ -1,7 +1,5 @@
-
 import { useState } from 'react';
 import './App.css';
-
 const initialValues = {
   duration: 6,
   inventory: 500,
@@ -10,7 +8,6 @@ const initialValues = {
   leadToVisit: 20,
   visitToBooking: 10,
 };
-
 const controls = [
   {
     key: 'duration',
@@ -61,93 +58,109 @@ const controls = [
     format: (value) => `${value}%`,
   },
 ];
-
 function App() {
   const [values, setValues] = useState(initialValues);
-
+  const [manualValues, setManualValues] = useState(
+    Object.fromEntries(
+      Object.entries(initialValues).map(([key, value]) => [
+        key,
+        String(value),
+      ])
+    )
+  );
   const updateValue = (key, value) => {
+    const numericValue = Number(value);
     setValues((previous) => ({
       ...previous,
-      [key]: Number(value),
+      [key]: numericValue,
+    }));
+    setManualValues((previous) => ({
+      ...previous,
+      [key]: String(numericValue),
     }));
   };
-
-  // A. Expected Site Visits
-  // Site Visits = Raw Leads × (Visit Rate / 100)
+  const updateManualValue = (key, rawValue) => {
+    setManualValues((previous) => ({
+      ...previous,
+      [key]: rawValue,
+    }));
+    if (rawValue === '') return;
+    const numericValue = Number(rawValue);
+    const control = controls.find((item) => item.key === key);
+    if (
+      Number.isFinite(numericValue) &&
+      numericValue >= control.min &&
+      numericValue <= control.max
+    ) {
+      setValues((previous) => ({
+        ...previous,
+        [key]: numericValue,
+      }));
+    }
+  };
+  const handleManualBlur = (key) => {
+    const control = controls.find((item) => item.key === key);
+    const rawValue = manualValues[key];
+    if (rawValue === '' || !Number.isFinite(Number(rawValue))) {
+      setManualValues((previous) => ({
+        ...previous,
+        [key]: String(values[key]),
+      }));
+      return;
+    }
+    const numericValue = Math.min(
+      control.max,
+      Math.max(control.min, Number(rawValue))
+    );
+    updateValue(key, numericValue);
+  };
   const totalVisits =
     values.leads * (values.leadToVisit / 100);
-
-  // B. Expected Bookings Before Inventory Cap
-  // Demand Bookings = Site Visits × (Booking Rate / 100)
   const demandBookings =
     totalVisits * (values.visitToBooking / 100);
-
-  // C. Project Bookings
-  // Project Bookings = min(Demand Bookings, Available Inventory)
   const projectBookings = Math.min(
     demandBookings,
     values.inventory
   );
-
-  // D. Lead Acquisition Spend
-  // Media Spend = Raw Leads × CPL
   const leadAcquisitionSpend =
     values.leads * values.costPerLead;
-
-  // E. Media CAC Per Booking
-  // Media CAC = Media Spend / Project Bookings
   const mediaCacPerBooking =
     projectBookings > 0
       ? leadAcquisitionSpend / projectBookings
       : 0;
-
-  // F. Average Monthly Lead Volume
-  // Monthly Leads = Raw Leads / Duration Months
   const monthlyLeads =
     values.leads / values.duration;
-
-  // G. Average Monthly Site Visits
-  // Monthly Visits = Site Visits / Duration Months
   const monthlyVisits =
     totalVisits / values.duration;
-
-  // H. Average Monthly Bookings
-  // Monthly Bookings = Project Bookings / Duration Months
   const monthlyBookings =
     projectBookings / values.duration;
-
-  // I. Inventory Absorption Rate
-  // Absorption Rate = (Project Bookings / Available Inventory) × 100
   const absorptionRate =
     (projectBookings / values.inventory) * 100;
-
-  // J. Remaining Inventory
-  // Remaining Units = Available Inventory - Project Bookings
   const remainingInventory =
     values.inventory - projectBookings;
-
-  // K. Estimated Inventory Sellout Timeline
-  // Sellout Months = Inventory / (Demand Bookings / Duration Months)
   const demandMonthlyBookings =
     demandBookings / values.duration;
-
   const selloutTime =
     demandMonthlyBookings > 0
       ? values.inventory / demandMonthlyBookings
       : null;
-
   const formatNumber = (number) =>
     Number(number).toLocaleString('en-IN', {
       maximumFractionDigits: 1,
     });
-
   const formatCurrency = (number) =>
     `₹${Math.round(number).toLocaleString('en-IN')}`;
-
   const resetSimulator = () => {
     setValues({ ...initialValues });
+    setManualValues(
+      Object.fromEntries(
+        Object.entries(initialValues).map(([key, value]) => [
+          key,
+          String(value),
+        ])
+      )
+    );
   };
-
   return (
     <main className="simulator">
       <header className="simulator-header">
@@ -160,13 +173,11 @@ function App() {
             }}
           />
         </div>
-
         <h1>
           Real Estate Sales and
           <span> Inventory Absorption Simulator</span>
         </h1>
       </header>
-
       <section className="controls-panel">
         <div className="section-heading">
           <div>
@@ -175,7 +186,6 @@ function App() {
             </span>
             <h2>Adjust your assumptions</h2>
           </div>
-
           <button
             className="reset-button"
             onClick={resetSimulator}
@@ -184,16 +194,13 @@ function App() {
             Reset values
           </button>
         </div>
-
         <div className="barometer-grid">
           {controls.map((control, index) => {
             const value = values[control.key];
-
             const percentage =
               ((value - control.min) /
                 (control.max - control.min)) *
               100;
-
             return (
               <div
                 className="barometer-card"
@@ -203,18 +210,15 @@ function App() {
                   <div className="parameter-number">
                     {String(index + 1).padStart(2, '0')}
                   </div>
-
                   <div className="parameter-info">
                     <label htmlFor={control.key}>
                       {control.label}
                     </label>
-
                     <div className="parameter-value">
                       {control.format(value)}
                     </div>
                   </div>
                 </div>
-
                 <div className="slider-wrapper">
                   <input
                     id={control.key}
@@ -235,12 +239,34 @@ function App() {
                     aria-label={control.label}
                   />
                 </div>
+                <div className="manual-input-wrapper">
+                  <label htmlFor={`${control.key}-manual`}>
+                    Manual Input
+                  </label>
+                  <input
+                    id={`${control.key}-manual`}
+                    type="number"
+                    min={control.min}
+                    max={control.max}
+                    step={control.step}
+                    value={manualValues[control.key]}
+                    onChange={(event) =>
+                      updateManualValue(
+                        control.key,
+                        event.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      handleManualBlur(control.key)
+                    }
+                    aria-label={`Enter ${control.label}`}
+                  />
+                </div>
               </div>
             );
           })}
         </div>
       </section>
-
       <section className="results-section">
         <div className="results-heading">
           <div>
@@ -249,13 +275,11 @@ function App() {
             </span>
             <h2>Simulation results</h2>
           </div>
-
           <span className="live-indicator">
             <span className="live-dot"></span>
             Updating live
           </span>
         </div>
-
         <div className="results-grid">
           <article className="result-card">
             <span className="result-label">
@@ -264,7 +288,6 @@ function App() {
             <strong>{formatNumber(totalVisits)}</strong>
             <p>Estimated completed visits from raw leads</p>
           </article>
-
           <article className="result-card">
             <span className="result-label">
               Lead Acquisition Spend
@@ -274,7 +297,6 @@ function App() {
             </strong>
             <p>Total leads × cost per lead</p>
           </article>
-
           <article className="result-card">
             <span className="result-label">
               Monthly Bookings
@@ -282,7 +304,6 @@ function App() {
             <strong>{monthlyBookings.toFixed(1)}</strong>
             <p>Average projected bookings per month</p>
           </article>
-
           <article className="result-card">
             <span className="result-label">
               Project Bookings
@@ -292,7 +313,6 @@ function App() {
               Estimated bookings over selected duration, inventory capped
             </p>
           </article>
-
           <article className="result-card">
             <span className="result-label">
               Media CAC / Booking
@@ -304,7 +324,6 @@ function App() {
             </strong>
             <p>Lead acquisition spend ÷ project bookings</p>
           </article>
-
           <article className="result-card">
             <span className="result-label">
               Sellout Time
@@ -314,14 +333,11 @@ function App() {
             </strong>
             <p>Estimated time to absorb inventory based on demand pace</p>
           </article>
-
           <article className="result-card absorption-card">
             <span className="result-label">
               Projected Inventory Absorption
             </span>
-
             <strong>{absorptionRate.toFixed(1)}%</strong>
-
             <div
               className="progress-track"
               role="progressbar"
@@ -339,18 +355,15 @@ function App() {
                 }}
               ></div>
             </div>
-
             <p>
               {formatNumber(projectBookings)} of{' '}
               {formatNumber(values.inventory)} units projected to be absorbed
             </p>
-
             <p>
               {formatNumber(remainingInventory)} units remaining
             </p>
           </article>
         </div>
-
         <div className="simulation-note">
           <span className="note-icon">i</span>
           <p>
@@ -361,5 +374,4 @@ function App() {
     </main>
   );
 }
-
 export default App;
